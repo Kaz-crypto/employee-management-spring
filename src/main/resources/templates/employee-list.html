@@ -29,16 +29,64 @@
 
 <h1 class="mb-4">社員一覧</h1>
 
+<div class="alert alert-success"
+     th:if="${message}"
+     th:text="${message}">
+</div>
+
 <form th:action="@{/employees}" method="get">
+
+	<label class="form-label">
+	    検索
+	</label>
     <input class="form-control"
            type="text"
            name="name"
-           th:value="${name}">
+           th:value="${name}"
+		   placeholder="名前を入力">
+		   <div class="mb-3">
+
+		       <label class="form-label">
+		           並び順
+		       </label>
+
+		       <select
+		           name="sort"
+		           class="form-select">
+
+		           <option value="id"
+		               th:selected="${sort == 'id'}">
+		               ID順
+		           </option>
+
+		           <option value="nameAsc"
+		               th:selected="${sort == 'nameAsc'}">
+		               名前（昇順）
+		           </option>
+
+		           <option value="nameDesc"
+		               th:selected="${sort == 'nameDesc'}">
+		               名前（降順）
+		           </option>
+
+		           <option value="ageAsc"
+		               th:selected="${sort == 'ageAsc'}">
+		               年齢（昇順）
+		           </option>
+
+		           <option value="ageDesc"
+		               th:selected="${sort == 'ageDesc'}">
+		               年齢（降順）
+		           </option>
+
+		       </select>
+		   </div>
 
     <button class="btn btn-primary" type="submit">
         検索
     </button>
 </form>
+<br>
 
 <br>
 
@@ -51,7 +99,7 @@
 	    <th>操作</th>
 	</tr>
 
-	<tr th:each="employee : ${employeeList}">
+	<tr th:each="employee : ${employeePage.content}">
 	    <td th:text="${employee.id}"></td>
 	    <td th:text="${employee.name}"></td>
 	    <td th:text="${employee.age}"></td>
@@ -80,8 +128,51 @@
 <br>
 
 <a th:href="@{/employees/new}" class="btn btn-success">
-    <button>新規登録</button>
+    新規登録
 </a>
+<br>
+
+<nav class="mt-3">
+    <ul class="pagination">
+
+        <li class="page-item"
+            th:classappend="${employeePage.first} ? 'disabled'">
+
+            <a class="page-link"
+               th:href="@{/employees(page=${employeePage.number - 1},
+                                     name=${name},
+                                     sort=${sort})}">
+                前へ
+            </a>
+
+        </li>
+
+        <li class="page-item"
+            th:each="i : ${#numbers.sequence(0, employeePage.totalPages - 1)}">
+
+            <a class="page-link"
+               th:text="${i + 1}"
+               th:href="@{/employees(page=${i},
+                                     name=${name},
+                                     sort=${sort})}">
+            </a>
+
+        </li>
+
+        <li class="page-item"
+            th:classappend="${employeePage.last} ? 'disabled'">
+
+            <a class="page-link"
+               th:href="@{/employees(page=${employeePage.number + 1},
+                                     name=${name},
+                                     sort=${sort})}">
+                次へ
+            </a>
+
+        </li>
+
+    </ul>
+</nav>
 <br>
 
 <a th:href="@{/}">トップへ戻る</a>

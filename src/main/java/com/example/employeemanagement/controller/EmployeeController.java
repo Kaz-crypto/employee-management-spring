@@ -5,10 +5,12 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.employeemanagement.entity.Employee;
 import com.example.employeemanagement.form.EmployeeForm;
@@ -27,15 +29,23 @@ public class EmployeeController {
     @GetMapping("/employees")
     public String employeeList(
             @RequestParam(required = false) String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "id") String sort,
             Model model) {
 
         if (name == null || name.isBlank()) {
-            model.addAttribute("employeeList", employeeService.findAll());
+        	model.addAttribute(
+        		    "employeePage",
+        		    employeeService.findAll(page, sort));
         } else {
-            model.addAttribute("employeeList", employeeService.searchByName(name));
+        	model.addAttribute(
+        		    "employeePage",
+        		    employeeService.searchByName(name, page, sort));
         }
 
         model.addAttribute("name", name);
+        model.addAttribute("sort", sort);
+        model.addAttribute("page", page);
 
         return "employee-list";
     }
@@ -53,13 +63,27 @@ public class EmployeeController {
     @PostMapping("/employees")
     public String saveEmployee(
             @Valid Employee employee,
-            BindingResult result) {
+            BindingResult result,
+            RedirectAttributes redirectAttributes) {
 
-        if(result.hasErrors()) {
+    	//新しいか判定する変数
+    	boolean isNew = (employee.getId() == null);
+    	
+        if (result.hasErrors()) {
             return "employee-form";
         }
 
         employeeService.save(employee);
+
+        if (isNew) {
+            redirectAttributes.addFlashAttribute(
+                "message",
+                "社員を登録しました。");
+        } else {
+            redirectAttributes.addFlashAttribute(
+                "message",
+                "社員情報を更新しました。");
+        }
 
         return "redirect:/employees";
     }
@@ -78,12 +102,28 @@ public class EmployeeController {
     
     //削除
     @PostMapping("/employees/{id}/delete")
-    public String deleteEmployee(@PathVariable Integer id) {
+    public String deleteEmployee(
+            @PathVariable Integer id,
+            RedirectAttributes redirectAttributes) {
 
-        employeeService.deleteById(id);
+        employeeService.delete(id);
+
+        redirectAttributes.addFlashAttribute(
+                "message",
+                "社員を削除しました。");
 
         return "redirect:/employees";
     }
     
+    //例外処理
+    @ExceptionHandler(RuntimeException.class)
+    public String handleRuntimeException(
+            RuntimeException e,
+            Model model) {
+
+        model.addAttribute("message", e.getMessage());
+
+        return "error";
+    }
     
 }
