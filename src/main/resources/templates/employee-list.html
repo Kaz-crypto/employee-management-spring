@@ -132,7 +132,9 @@
 </a>
 <br>
 
-<nav class="mt-3">
+<nav class="mt-3"
+     th:if="${employeePage.totalPages > 1}">
+
     <ul class="pagination">
 
         <li class="page-item"
